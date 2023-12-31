@@ -10,18 +10,40 @@ contract Ownable{
         require(msg.sender == owner, "Must be owner");
         _;
     }
+
+
+    constructor(){
+        owner = msg.sender;
+    }
 }
 
 
-contract MyContract is Ownable{
+contract SecretVault {
     string secret;
 
     constructor(string memory _secret){
         secret = _secret;
-        owner = msg.sender;
     }
 
-    function getSecret() public view onlyOwner returns(string memory){
+    function getSecret() public view returns(string memory){
         return secret;
     }
+}
+
+// now this smart contract will create another smart contract 
+contract MyContract is Ownable{
+
+    address secretVaults;
+
+    constructor(string memory _secret){
+        super; //calling the Ownable class constructor from this constructor
+        SecretVault _secretVault = new SecretVault(_secret);
+        secretVaults = address(_secretVault); // storign the created vault addresses
+    }
+
+    //calling one contract from another smart contract
+    function getSecret() public view returns(string memory){
+        return SecretVault(secretVaults).getSecret();
+    }
+
 }
