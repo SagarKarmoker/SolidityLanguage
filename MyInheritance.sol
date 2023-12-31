@@ -42,7 +42,7 @@ contract MyContract is Ownable{
     }
 
     //calling one contract from another smart contract
-    function getSecret() public view returns(string memory){
+    function getSecret() public onlyOwner view returns(string memory){
         return SecretVault(secretVaults).getSecret();
     }
 
