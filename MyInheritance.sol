@@ -4,18 +4,17 @@ pragma solidity ^0.8.0;
 // inheritance
 
 contract Ownable{
-    
-}
-
-
-contract MyContract {
     address owner;
-    string secret;
 
     modifier onlyOwner() {
         require(msg.sender == owner, "Must be owner");
         _;
     }
+}
+
+
+contract MyContract is Ownable{
+    string secret;
 
     constructor(string memory _secret){
         secret = _secret;
