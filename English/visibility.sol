@@ -4,6 +4,11 @@ pragma solidity ^0.8.0;
 //Visibility
 
 contract Parent{
+
+    string private pText = "This is private text";
+    string public pubText = "This is public text";
+    string internal inText = "This is internal text";
+
     function privateFunc() private pure returns(string memory){
         return "Private func in Parent";
     }
@@ -16,7 +21,7 @@ contract Parent{
         return "Internal func called";
     }
 
-    function testInternalFunc() public pure returns (string memory) {
+    function testInternalFunc() public pure virtual returns (string memory) {
         return internalFunc();
     }
 
@@ -30,5 +35,7 @@ contract Parent{
 }
 
 contract Child is Parent{
-    
+    function testInternalFunc() public pure override returns(string memory){
+        return internalFunc();
+    }
 }
