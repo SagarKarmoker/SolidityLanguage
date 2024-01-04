@@ -1,6 +1,9 @@
 // SPDX-License-Identifier: MIT 
 pragma solidity ^0.8.0;
 
+// if the struct definded in another file then import
+// import "./StructDecalered.sol"
+
 //Structs
 contract TodoContract {
 
