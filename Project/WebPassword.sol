@@ -2,8 +2,9 @@
 pragma solidity ^0.8.0;
 
 /* 
-    Blockchain based password manager V1.0
+    Blockchain based password manager v1.0.0
     by Sagar Karmoker
+    https://github.com/SagarKarmoker
  */
 
 contract PasswordVault{
@@ -97,4 +98,15 @@ contract PasswordVaultFactory{
         return userVault.getVault();
     }
     
+    function updatePass() public returns(bool){
+        
+    }
+
+    function deletePass() public returns(bool){
+
+    }
+
+    function destoryVault() public returns(bool){
+
+    }
 }
