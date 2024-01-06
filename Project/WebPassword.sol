@@ -2,19 +2,19 @@
 pragma solidity ^0.8.0;
 
 /* 
-    Blockchain based password manager v1.0.0
+    Blockchain based password manager v1.1.0
     by Sagar Karmoker
     https://github.com/SagarKarmoker
  */
 
-contract PasswordVault{
+contract PasswordVault {
     // owner -> who want to create vault
     address owner;
     address public vaultAddr;
     uint256 createdOn;
 
     // password storing structure
-    struct Password{
+    struct Password {
         string username;
         string email;
         string password;
@@ -24,7 +24,7 @@ contract PasswordVault{
     Password[] passVault;
 
     // during the factory contract calling the owner will be set
-    constructor(){
+    constructor() {
         owner = msg.sender;
         vaultAddr = address(this);
         createdOn = block.timestamp;
@@ -48,17 +48,38 @@ contract PasswordVault{
         passVault.push(Password(_username, _email, _password, _url));
     }
 
-    function getVault() public view onlyOwner returns(Password[] memory) {
+    function getVault() public view onlyOwner returns (Password[] memory) {
         return passVault;
     }
 
-    function destoryVault() public onlyOwner {
-        // destory the vault 
+    function updatePass(
+        uint _index,
+        string memory _newusername,
+        string memory _newemail,
+        string memory _newpass,
+        string memory _newurl
+    ) public onlyOwner {
+        require(_index <= passVault.length, "Index out of bound");
+        passVault[_index].username = _newusername;
+        passVault[_index].email = _newemail;
+        passVault[_index].password = _newpass;
+        passVault[_index].url = _newurl;
     }
 
+    function deletePass(uint _index) public onlyOwner returns (bool) {
+        if (_index < passVault.length) {
+            delete passVault[_index];
+            return true;
+        }
+        return false;
+    }
+
+    function destroyVault() public onlyOwner {
+        selfdestruct(payable(owner));
+    }
 }
 
-contract PasswordVaultFactory{
+contract PasswordVaultFactory {
     // Mapping from user addresses to their vaults
     mapping(address => PasswordVault) private userVaults;
 
@@ -66,12 +87,18 @@ contract PasswordVaultFactory{
     event AddPassword(bool success);
 
     modifier VaultCheck() {
-        require(address(userVaults[msg.sender]) != address(0), "Vault does not exist");
+        require(
+            address(userVaults[msg.sender]) != address(0),
+            "Vault does not exist"
+        );
         _;
     }
 
     function createVault() public {
-        require(address(userVaults[msg.sender]) == address(0), "Vault already exists");
+        require(
+            address(userVaults[msg.sender]) == address(0),
+            "Vault already exists"
+        );
 
         PasswordVault vault = new PasswordVault();
         userVaults[msg.sender] = vault;
@@ -89,24 +116,46 @@ contract PasswordVaultFactory{
         emit AddPassword(true);
     }
 
-    function getVaultAddr() public view VaultCheck returns (PasswordVault){
+    function getVaultAddr() public view VaultCheck returns (PasswordVault) {
         return userVaults[msg.sender];
     }
 
-    function getVault() public view VaultCheck returns(PasswordVault.Password[] memory) {
+    function getVault()
+        public
+        view
+        VaultCheck
+        returns (PasswordVault.Password[] memory)
+    {
         PasswordVault userVault = userVaults[msg.sender];
         return userVault.getVault();
     }
-    
-    function updatePass() public returns(bool){
-        
+
+    function updatePass(
+        uint _index,
+        string memory _newusername,
+        string memory _newemail,
+        string memory _newpass,
+        string memory _newurl
+    ) public VaultCheck {
+        PasswordVault userVault = userVaults[msg.sender];
+        userVault.updatePass(
+            _index,
+            _newusername,
+            _newemail,
+            _newpass,
+            _newurl
+        );
     }
 
-    function deletePass() public returns(bool){
-
+    // Inside PasswordVaultFactory contract
+    function deletePass(uint _index) public VaultCheck returns (bool) {
+        PasswordVault userVault = userVaults[msg.sender];
+        return userVault.deletePass(_index);
     }
 
-    function destoryVault() public returns(bool){
-
+    function destoryVault() public VaultCheck {
+        PasswordVault userVault = userVaults[msg.sender];
+        delete userVaults[msg.sender];
+        userVault.destroyVault();
     }
 }
