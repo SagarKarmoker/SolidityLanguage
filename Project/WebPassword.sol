@@ -84,7 +84,7 @@ contract PasswordVaultFactory {
     mapping(address => PasswordVault) private userVaults;
 
     event CreateVault(address indexed user, address vaultAddr);
-    event AddPassword(bool success);
+    event Notify(address owner,bool success);
 
     modifier VaultCheck() {
         require(
@@ -113,7 +113,7 @@ contract PasswordVaultFactory {
     ) public VaultCheck {
         PasswordVault userVault = userVaults[msg.sender];
         userVault.addPass(_username, _email, _password, _url);
-        emit AddPassword(true);
+        emit Notify(msg.sender, true);
     }
 
     function getVaultAddr() public view VaultCheck returns (PasswordVault) {
@@ -145,6 +145,7 @@ contract PasswordVaultFactory {
             _newpass,
             _newurl
         );
+        emit Notify(msg.sender, true);
     }
 
     // Inside PasswordVaultFactory contract
