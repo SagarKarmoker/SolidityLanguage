@@ -2,9 +2,10 @@
 pragma solidity ^0.8.0;
 
 /* 
-    Blockchain based password manager v1.1.0
+    Blockchain based password manager v1.2.0
     by Sagar Karmoker
     https://github.com/SagarKarmoker
+    v1.1.0 -> WebPassword.sol
  */
 
 contract PasswordVault {
@@ -41,7 +42,7 @@ contract PasswordVault {
         return owner;
     }
 
-    function getMyKey() public onlyOwner view returns(string memory) {
+    function getMyKey() public view onlyOwner returns (string memory) {
         return encryptionKey;
     }
 
@@ -59,7 +60,7 @@ contract PasswordVault {
     }
 
     function updatePass(
-        uint _index,
+        uint256 _index,
         string memory _newusername,
         string memory _newemail,
         string memory _newpass,
@@ -72,7 +73,7 @@ contract PasswordVault {
         passVault[_index].url = _newurl;
     }
 
-    function deletePass(uint _index) public onlyOwner returns (bool) {
+    function deletePass(uint256 _index) public onlyOwner returns (bool) {
         if (_index < passVault.length) {
             delete passVault[_index];
             return true;
@@ -90,7 +91,7 @@ contract PasswordVaultFactory {
     mapping(address => PasswordVault) private userVaults;
 
     event CreateVault(address indexed user, address vaultAddr);
-    event Notify(address owner,bool success);
+    event Notify(address owner, bool success);
 
     modifier VaultCheck() {
         require(
@@ -106,7 +107,7 @@ contract PasswordVaultFactory {
             "Vault already exists"
         );
 
-        PasswordVault vault = new PasswordVault( _encryptKey);
+        PasswordVault vault = new PasswordVault(_encryptKey);
         userVaults[msg.sender] = vault;
         emit CreateVault(msg.sender, address(vault));
     }
@@ -122,22 +123,27 @@ contract PasswordVaultFactory {
         emit Notify(msg.sender, true);
     }
 
-    function getVaultAddr() public view VaultCheck returns (PasswordVault) {
-        return userVaults[msg.sender];
+    function getVaultAddr(address _owner) public view returns (PasswordVault) {
+        return userVaults[_owner];
     }
 
-    function getVault()
+    function getVault(string memory _key)
         public
         view
         VaultCheck
         returns (PasswordVault.Password[] memory)
     {
         PasswordVault userVault = userVaults[msg.sender];
+        require(
+            keccak256(abi.encodePacked(_key)) ==
+                keccak256(abi.encodePacked(userVault.getMyKey())),
+            "Unable to verify"
+        );
         return userVault.getVault();
     }
 
     function updatePass(
-        uint _index,
+        uint256 _index,
         string memory _newusername,
         string memory _newemail,
         string memory _newpass,
@@ -155,9 +161,14 @@ contract PasswordVaultFactory {
     }
 
     // Inside PasswordVaultFactory contract
-    function deletePass(uint _index) public VaultCheck returns (bool) {
+    function deletePass(uint256 _index) public VaultCheck returns (bool) {
         PasswordVault userVault = userVaults[msg.sender];
         return userVault.deletePass(_index);
+    }
+
+    function getMyKey() public view returns(string memory){
+        PasswordVault userVault = userVaults[msg.sender];
+        return userVault.getMyKey();
     }
 
     function destoryVault() public VaultCheck {
